@@ -11,6 +11,9 @@ from torch import nn
 import pandas as pd
 from utils import weight_visualization
 
+device = "cuda:1" if torch.cuda.is_available() else "cpu"
+cuda = "cuda:1"
+
 
 class WeightAndSum(nn.Module):
     def __init__(self, in_feats, task_num=1, attention=True, return_weight=False):
@@ -433,6 +436,8 @@ class Meter(object):
 def collate_molgraphs(data):
     smiles, graphs, labels, mask = map(list, zip(*data))
     bg = dgl.batch(graphs)
+    #!!!!!!!!就是这个地方没有加 cuda
+    bg = bg.to(device)
     bg.set_n_initializer(dgl.init.zero_initializer)
     bg.set_e_initializer(dgl.init.zero_initializer)
     labels = torch.tensor(labels)
@@ -751,7 +756,7 @@ class EarlyStopping(object):
     def __init__(self, pretrained_model='Null_early_stop.pth', mode='higher', patience=10, filename=None, task_name="None"):
         if filename is None:
             task_name = task_name
-            filename ='../model/{}_early_stop.pth'.format(task_name)
+            filename ='./model/{}_early_stop.pth'.format(task_name)
 
         assert mode in ['higher', 'lower']
         self.mode = mode
@@ -811,7 +816,7 @@ class EarlyStopping(object):
     def load_checkpoint(self, model):
         '''Load model saved with early stopping.'''
         # model.load_state_dict(torch.load(self.filename)['model_state_dict'])
-        model.load_state_dict(torch.load(self.filename, map_location=torch.device('cpu'))['model_state_dict'])
+        model.load_state_dict(torch.load(self.filename, map_location=torch.device(cuda))['model_state_dict'])
 
     def load_pretrained_model(self, model):
         pretrained_parameters = ['gnn_layers.0.graph_conv_layer.weight',
@@ -837,7 +842,7 @@ class EarlyStopping(object):
         if torch.cuda.is_available():
             pretrained_model = torch.load('../model/'+self.pretrained_model)
         else:
-            pretrained_model = torch.load('../model/'+self.pretrained_model, map_location=torch.device('cpu'))
+            pretrained_model = torch.load('../model/'+self.pretrained_model, map_location=torch.device(cuda))
         model_dict = model.state_dict()
         pretrained_dict = {k: v for k, v in pretrained_model['model_state_dict'].items() if k in pretrained_parameters}
         model_dict.update(pretrained_dict)
@@ -932,7 +937,7 @@ class EarlyStopping(object):
         if torch.cuda.is_available():
             pretrained_model = torch.load('../model/' + self.pretrained_model)
         else:
-            pretrained_model = torch.load('../model/' + self.pretrained_model, map_location=torch.device('cpu'))
+            pretrained_model = torch.load('../model/' + self.pretrained_model, map_location=torch.device(cuda))
         model_dict = model.state_dict()
         pretrained_dict = {k: v for k, v in pretrained_model['model_state_dict'].items() if k in pretrained_parameters}
         model_dict.update(pretrained_dict)

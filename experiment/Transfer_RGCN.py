@@ -9,12 +9,12 @@ import os
 import time
 import pandas as pd
 start = time.time()
-os.environ["CUDA_VISIBLE_DEVICES"] = "3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 
 # fix parameters of model
 args = {}
-args['device'] = "cuda" if torch.cuda.is_available() else "cpu"
+args['device'] = "cuda:1" if torch.cuda.is_available() else "cpu"
 args['atom_data_field'] = 'atom'
 args['bond_data_field'] = 'etype'
 args['classification_metric_name'] = 'roc_auc'
